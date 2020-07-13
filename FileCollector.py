@@ -22,57 +22,69 @@ class App(Frame):
 
     def __init__(self):
         super().__init__()
-        self.initUI()
+        self.init_UI()
 
-    def initUI(self):
-        self.master.title("Health Check Collector")
+    def init_layout(self):
+        self.master.title("Tkinter File Collector")
         self.pack(fill=BOTH, expand=True)
         self.columnconfigure(1, weight=1)
         self.columnconfigure(3, pad=7)
         self.rowconfigure(3,weight=1)
         self.rowconfigure(5, pad=7)
 
-        self.labelInstructions = Label(self, text="Please browse the files you want to upload.")
-        self.labelInstructions.grid(sticky=W, pady=4, padx=5)
-
+    def init_labels(self):
         self.area=Listbox(self, font=('Consolas',10))
         self.area.grid(row=1, column=0, columnspan=2, rowspan=4, padx=5, sticky=E+W+S+N)
 
+    def init_scrollbar(self):
         self.scrollbar=Scrollbar(self, orient="vertical")
         self.scrollbar.config(command=self.area.yview)
         self.scrollbar.grid(row=1, column=2, rowspan=4, padx=5, sticky=E+W+S+N)
         self.area.config(yscrollcommand=self.scrollbar.set)
 
-        self.buttonBrowse=Button(self,text="Browse Files", command=self.loadFiles, width=10)
+    def init_button_browse(self):
+        self.buttonBrowse=Button(self,text="Browse Files", command=self.load_files, width=10)
         self.buttonBrowse.grid(row=1, column=3)
 
+    def init_button_close(self):
         self.buttonClose=Button(self, text="Close", command=self.master.quit, width=10)
         self.buttonClose.grid(row=2, column=3, pady=4)
 
-        self.buttonHelp=Button(self, text="Help", command=self.displayHelp, width=10)
+    def init_button_help(self):
+        self.buttonHelp=Button(self, text="Help", command=self.display_help, width=10)
         self.buttonHelp.grid(row=5, column=0, padx=5)
 
+    def init_button_upload(self):
         self.buttonUpload=Button(self, text="Upload", command=self.upload_files, width=10)
         self.buttonUpload.grid(row=5, column=3)
 
+    def init_buttons(self):
+        self.init_button_browse()
+        self.init_button_close()
+        self.init_button_help()
+        self.init_button_upload()
 
-    def displayMessage(self,message):
+    def init_UI(self):
+        self.init_layout()
+        self.init_labels()
+        self.init_scrollbar()
+        self.init_buttons()
+
+    def display_message(self,message):
         self.topLevel=Toplevel(self.master)
         self.topLevel.title("Help")
-
         self.stringVar=StringVar()
         self.message=Message(self.topLevel, textvariable=self.stringVar)
         self.stringVar.set(message)
         self.message.pack()
-
         self.button=Button(self.topLevel, text="Ok", command=self.topLevel.destroy)
         self.button.pack()
 
-    def displayHelp(self):
+    def display_help(self):
         CONST_HELP_MESSAGE='To upload a file press the "Browse Files" button, then click the "Upload Files" button'
-        self.displayMessage(CONST_HELP_MESSAGE)
+        self.display_message(CONST_HELP_MESSAGE)
 
-    def displayListBox(self, indexToSelect):
+    def display_listBox(self, indexToSelect):
         self.area.delete(0, END)
         if len(App.uploadFiles) > 0:
             self.area.insert(END, "No.  File Name                          Upload Status")
@@ -88,7 +100,7 @@ class App(Frame):
                     self.area.select_set(indexToSelect,indexToSelect)
                 self.area.update()
             
-    def loadFiles(self):
+    def load_files(self):
         fileNames=filedialog.askopenfilenames(filetypes = (("JSON/text files", "*.json;*.txt"),("All Files","*.*")))
         if fileNames:
             try:
@@ -98,31 +110,28 @@ class App(Frame):
                     uploadFile.uploadStatus='None'
                     uploadFile.fileName=os.path.basename(fileName)
                     App.uploadFiles.append(uploadFile)
-                self.displayListBox(None)
+                self.display_listBox(None)
             except Exception as ex:
                 print(ex.args[0])
                 print("Error on loading files.")
 
-    def isServerReachable(self, serverAddress):
+    def is_server_reachable(self, serverAddress):
         socket.socker(socket.AF_INET,socket.SOCK_STREAM)
         reply=os.system('ping '+ serverAddress)
         return True if reply == 0 else False
 
-    def updateFieldProgress(self,index):
-        App.uploadFiles[index].uploadStatus='Uploading .'
-        time.sleep(1)
-        self.displayListBox(None)
-        App.uploadFiles[index].uploadStatus+=' .'
-        time.sleep(1)
-        self.displayListBox(None)
-        App.uploadFiles[index].uploadStatus+=' .'
-        time.sleep(1)
-        self.displayListBox(None)
+    def update_field_progress(self):
+        yield 'Uploading .'
+        yield 'Uploading . .'
+        yield 'Uploading . . .'
 
     def upload_files(self):
         try:        
             for i in range(len(App.uploadFiles)):
-                self.updateFieldProgress(i)
+                for status in self.update_field_progress():
+                    App.uploadFiles[i].uploadStatus=status
+                    time.sleep(1)
+                    self.display_listBox(None)
                 with open(App.uploadFiles[i].fullPath) as fileInput:
                     textContent=fileInput.read()
                 try:
@@ -133,24 +142,15 @@ class App(Frame):
                     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                     print(exc_type, fname, exc_tb.tb_lineno)
                     App.uploadFiles[i].uploadStatus='Upload Error'
-                self.displayListBox(None)
-            self.displayMessage('Files uploaded!')
+                self.display_listBox(None)
+            self.display_message('Files uploaded!')
         except:
             print("Exception uploading files")
-            self.displayMessage("Error uploading files.")
+            self.display_message("Error uploading files.")
 
     def post(self,fileName,fileContent):
-        print(fileName)
-        print(fileContent)
-        text = ''
-        if fileContent == None:
-            with open(fileName) as f:
-                text=f.read()
-        else:
-            text=fileContent
         url="http://localhost:8080/upload"
         payload = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"fileupload\"; filename=\"{0}\"\r\nContent-Type: text/plain\r\n\r\n{1}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--".format(fileName,fileContent)
-        print(payload)
         headers = {
             'content-type': "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",
             'cache-control': "no-cache",
