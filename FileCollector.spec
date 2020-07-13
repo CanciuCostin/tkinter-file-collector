@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['FileCollector.py'],
-             pathex=['C:\\Users\\CostinCanciu\\Desktop\\Workspaces\\personal\\tkinter-file-collector'],
+             pathex=['tkinter-file-collector'],
              binaries=[],
              datas=[],
              hiddenimports=[],

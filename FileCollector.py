@@ -11,6 +11,12 @@ from tkinter import Tk, Label, Button, Listbox, Entry, IntVar, END, W, E, N, S, 
 import time
 import socket
 
+"""
+Author: Costin Canciu
+Entrypoint: FileCollector.py
+Description: Collect files from client and send them to a server using multipart form POST requests
+"""
+
 @dataclass
 class UploadFile:
     fullPath: str = ''
@@ -130,7 +136,7 @@ class App(Frame):
             for i in range(len(App.uploadFiles)):
                 for status in self.update_field_progress():
                     App.uploadFiles[i].uploadStatus=status
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self.display_listBox(None)
                 with open(App.uploadFiles[i].fullPath) as fileInput:
                     textContent=fileInput.read()
