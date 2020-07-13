@@ -47,5 +47,4 @@ url="http://localhost:8080/upload"
 * Change your form field name and request body inside the post() method:
 ```
 payload = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"fileupload\"; filename=\"{0}\"\r\nContent-Type: text/plain\r\n\r\n{1}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--".format(fileName,fileContent)
-
 ```
